@@ -1,9 +1,33 @@
-# thetis
-A simple ready-to-use http.Handler to register http-related metrics, using prometheus.
+package main
 
-## Usage 
+import (
+	"fmt"
+	"net/http"
 
-```go
+	"github.com/thewraven/thetis"
+)
+
+func createServer() *http.ServeMux {
+	var mux http.ServeMux
+	home := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusOK)
+		fmt.Fprintln(w, "Hello,world!")
+	}
+	bang := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusInternalServerError)
+		fmt.Fprintln(w, "Not working")
+	}
+	tea := func(w http.ResponseWriter, r *http.Request) {
+		w.WriteHeader(http.StatusTeapot)
+		fmt.Fprintln(w, "I'm a teapot")
+	}
+
+	mux.HandleFunc("/", home)
+	mux.HandleFunc("/bang", bang)
+	mux.HandleFunc("/tea", tea)
+
+	return &mux
+}
 
 func main() {
 	//initialize your http server
@@ -24,9 +48,3 @@ func main() {
 	//use the monitorServer as a regular http.Handler
 	http.ListenAndServe(":7070", monitorServer)
 }
-
-```
-
-With this code, you can request /metrics for obtaining simple http information related to the requests.
-
-See example/server.go for the full working example.

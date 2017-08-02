@@ -4,6 +4,7 @@ import (
 	"net/http"
 
 	"github.com/prometheus/client_golang/prometheus"
+	"github.com/prometheus/client_golang/prometheus/promhttp"
 )
 
 //Handler is a custom implementation of an http.Handler
@@ -50,12 +51,13 @@ func (h *Handler) Add(c ...Metric) {
 
 //RegisterAll registers the given Collectors.
 //calls to prometheus.MustRegister could panic, please check the documentation
-func (h *Handler) RegisterAll() {
+func (h *Handler) RegisterAll() http.Handler {
 	collectors := make([]prometheus.Collector, len(h.metrics))
 	for i, m := range h.metrics {
 		collectors[i] = m.GetCollector()
 	}
 	prometheus.MustRegister(collectors...)
+	return promhttp.Handler()
 }
 
 //ServeHTTP implements the http.Handler interface
