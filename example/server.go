@@ -31,7 +31,7 @@ func createServer() *http.ServeMux {
 
 func main() {
 	//initialize your http server
-	var server *http.ServeMux = createServer()
+	server := createServer()
 
 	//create a monitor registering the default http monitor
 	//You can add custom monitors using the Add(thetis.Metric) method
@@ -46,5 +46,7 @@ func main() {
 	server.Handle("/metrics", prometheusHandler)
 
 	//use the monitorServer as a regular http.Handler
-	http.ListenAndServe(":7070", monitorServer)
+	port := ":7070"
+	fmt.Println("Server listening at ", port)
+	http.ListenAndServe(port, monitorServer)
 }

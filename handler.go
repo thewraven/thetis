@@ -11,6 +11,7 @@ import (
 //that calls the custom metrics on every route.
 type Handler struct {
 	metrics        []Metric
+	handlers       []http.Handler
 	wrappedHandler http.Handler
 }
 
@@ -53,8 +54,10 @@ func (h *Handler) Add(c ...Metric) {
 //calls to prometheus.MustRegister could panic, please check the documentation
 func (h *Handler) RegisterAll() http.Handler {
 	collectors := make([]prometheus.Collector, len(h.metrics))
+	h.handlers = make([]http.Handler, len(collectors))
 	for i, m := range h.metrics {
 		collectors[i] = m.GetCollector()
+		h.handlers[i] = m.CreateHandler()
 	}
 	prometheus.MustRegister(collectors...)
 	return promhttp.Handler()
@@ -65,8 +68,8 @@ func (h *Handler) RegisterAll() http.Handler {
 func (h *Handler) ServeHTTP(w http.ResponseWriter, r *http.Request) {
 	sw := &statusWriter{w: w}
 	h.wrappedHandler.ServeHTTP(sw, r)
-	for _, m := range h.metrics {
-		m.CreateHandler().ServeHTTP(sw, r)
+	for _, h := range h.handlers {
+		h.ServeHTTP(sw, r)
 	}
 }
 
